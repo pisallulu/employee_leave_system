@@ -3,15 +3,16 @@
 namespace App\Filament\Resources\LeaveRequests\Schemas;
 
 use Filament\Schemas\Schema;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Carbon\Carbon;
-use Filament\Schemas\Components\Section as ComponentsSection;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Carbon;
+
+
+use Filament\Schemas\Components\Section;
 
 class LeaveRequestForm
 {
@@ -19,9 +20,8 @@ class LeaveRequestForm
     {
         return $schema
             ->components([
-                ComponentsSection::make('Request Details')
+                Section::make('Request Details')
                     ->schema([
-                        // 1. Link to User
                         Select::make('user_id')
                             ->relationship('user', 'name')
                             ->label('Employee')
@@ -29,57 +29,37 @@ class LeaveRequestForm
                             ->searchable()
                             ->preload(),
 
-                        // 2. Link to Leave Type
                         Select::make('leave_type_id')
                             ->relationship('leaveType', 'name')
                             ->label('Leave Category')
                             ->required(),
 
-                        
-
-                        // 3. Date Logic (Start)
                         DatePicker::make('start_date')
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($get, $set) { // Remove "Get" and "Set" type hints here
-                                $start = $get('start_date');
-                                $end = $get('end_date');
-
-                                if ($start && $end) {
-                                    $days = Carbon::parse($start)->diffInDays(Carbon::parse($end)) + 1;
-                                    $set('total_days', $days);
-                                }
+                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                self::calculateDays($get, $set);
                             }),
 
-                        // 3. Date Logic (End) - Do the same here so it updates both ways
                         DatePicker::make('end_date')
                             ->required()
                             ->live()
-                            // Remove the long \Filament\Forms\Get path. Use just $get and $set.
-                            ->afterStateUpdated(function ($get, $set) { 
-                                $start = $get('start_date');
-                                $end = $get('end_date');
-
-                                if ($start && $end) {
-                                    // Using Carbon directly (ensure 'use Carbon\Carbon;' is at top of file)
-                                    $days = Carbon::parse($start)->diffInDays(Carbon::parse($end)) + 1;
-                                    $set('total_days', $days);
-                                }
+                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                self::calculateDays($get, $set);
                             }),
-                                                // Read-Only Calculation Field
+
                         TextInput::make('total_days')
                             ->label('Total Days Requested')
                             ->numeric()
-                            ->disabled()
-                            ->readonly() // User cannot edit this
-                            ->dehydrated(false) // Don't save to DB (calculated on fly)
+                            ->readonly()
+                            ->dehydrated(false) 
                             ->prefix('Days'),
 
                         Textarea::make('reason')
                             ->columnSpanFull(),
                     ])->columns(2),
 
-                ComponentsSection::make('Approval Workflow')
+                Section::make('Approval Workflow')
                     ->schema([
                         Select::make('status')
                             ->options([
@@ -89,33 +69,35 @@ class LeaveRequestForm
                             ])
                             ->default('pending')
                             ->required()
-                            ->native(false),
+                            ->native(false)
+                            ->live(), // Added live() so rejection_reason toggles instantly
                             
                         Textarea::make('rejection_reason')
                             ->label('Reason for Rejection')
-                            ->visible(fn ( $get) => $get('status') === 'rejected')
+                            ->visible(fn (Get $get) => $get('status') === 'rejected')
                             ->columnSpanFull(),
                     ])->columns(1),
             ]);
     }
 
-    // Custom Function to Calculate Dates
-    public static function calculateDays( $get,  $set)
-    {
-        $start = $get('start_date');
-        $end = $get('end_date');
+    // Fixed the "et$set" typos here
+    public static function calculateDays(Get $get, Set $set): void
+{
+    $start = $get('start_date');
+    $end = $get('end_date');
 
-        if ($start && $end) {
-            $startDate = Carbon::parse($start);
-            $endDate = Carbon::parse($end);
+    if ($start && $end) {
+        $startDate = Carbon::parse($start);
+        $endDate = Carbon::parse($end);
 
-            if ($endDate->gte($startDate)) {
-                // inclusive of start date (+1)
-                $days = $startDate->diffInDays($endDate) + 1; 
-                $set('total_days', $days);
-            } else {
-                $set('total_days', 'Invalid Range');
-            }
+        if ($endDate->gte($startDate)) {
+            // +1 includes the end day in the count
+            $days = $startDate->diffInDays($endDate) + 1; 
+            $set('total_days', $days);
+        } else {
+            $set('total_days', 'Invalid Range');
         }
     }
+}
+
 }
