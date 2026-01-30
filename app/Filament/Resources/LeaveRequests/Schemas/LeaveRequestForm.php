@@ -67,8 +67,11 @@ class LeaveRequestForm
                                                 // Read-Only Calculation Field
                         TextInput::make('total_days')
                             ->label('Total Days Requested')
-                            ->disabled() // User cannot edit this
-                            ->dehydrated(false), // Don't save to DB (calculated on fly)
+                            ->numeric()
+                            ->disabled()
+                            ->readonly() // User cannot edit this
+                            ->dehydrated(false) // Don't save to DB (calculated on fly)
+                            ->prefix('Days'),
 
                         Textarea::make('reason')
                             ->columnSpanFull(),
