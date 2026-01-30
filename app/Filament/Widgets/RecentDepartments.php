@@ -29,7 +29,7 @@ class RecentDepartments extends TableWidget
                 
             ])
             ->striped()
-            //->hoverIndicator()
+            //->hoverIndicator()        
             ->filters([
                 //
             ])

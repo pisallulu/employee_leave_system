@@ -10,13 +10,10 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {       
-        Schema::create('leave_types', function (Blueprint       $table) {
-            $table->id();
-            $table->string('name')->unique(); // Ensure this column exists
-            $table->integer('limit_days');
-            
-            $table->timestamps();
+    {
+        Schema::table('leave_types', function (Blueprint $table) {
+            //
+            $table->softDeletes();
         });
     }
 
@@ -25,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('leave_types');
+        Schema::table('leave_types', function (Blueprint $table) {
+            //
+        });
     }
 };

@@ -18,22 +18,24 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+
+
 class LeaveTypeResource extends Resource
 {
     protected static ?string $model = LeaveType::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::CalendarDays;
 
     protected static ?string $recordTitleAttribute = 'yes';
 
-    public static function form(Schema $schema): Schema
-    {
-        return LeaveTypeForm::configure($schema);
-    }
+   public static function form(Schema $schema): Schema
+   {
+    return LeaveTypeForm::configure($schema);
+   }
 
     public static function infolist(Schema $schema): Schema
     {
-        return LeaveTypeInfolist::configure($schema);
+        return LeaveTypeForm::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -65,4 +67,5 @@ class LeaveTypeResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+    
 }

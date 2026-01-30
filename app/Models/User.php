@@ -3,11 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 
-class User extends Authenticatable
+class User extends Authenticatable 
+
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -22,6 +27,19 @@ class User extends Authenticatable
         'email',
         'password',
     ];
+    // public function canAccessFilament(): bool
+    // {
+    //     return str_ends_with($this->email, '@example.com') && $this->hasVerifiedEmail();
+    // }
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() === 'admin')
+            {
+                return str_ends_with($this->email, '@example.com') && $this->hasVerifiedEmail();
+            }
+            return true;
+    }
+    
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,6 +63,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    
     public function department(){
         return $this->belongsTo(Department::class);
     }
