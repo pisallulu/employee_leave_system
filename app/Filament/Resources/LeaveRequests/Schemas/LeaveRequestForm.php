@@ -55,11 +55,13 @@ class LeaveRequestForm
                         DatePicker::make('end_date')
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($get, $set) {
+                            // Remove the long \Filament\Forms\Get path. Use just $get and $set.
+                            ->afterStateUpdated(function ($get, $set) { 
                                 $start = $get('start_date');
                                 $end = $get('end_date');
 
                                 if ($start && $end) {
+                                    // Using Carbon directly (ensure 'use Carbon\Carbon;' is at top of file)
                                     $days = Carbon::parse($start)->diffInDays(Carbon::parse($end)) + 1;
                                     $set('total_days', $days);
                                 }
